@@ -589,8 +589,25 @@ tailwind.config = {{
     z-index: 1000 !important;
   }}
   .listing-card.active-listing {{
-    ring: 2px solid #0274B6;
-    box-shadow: 0 0 0 3px rgba(2, 116, 182, 0.3);
+    outline: 4px dashed #0274B6 !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 8px rgba(2, 116, 182, 0.15), 0 4px 20px rgba(2, 116, 182, 0.3) !important;
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+    z-index: 5;
+    position: relative;
+  }}
+  @keyframes marker-pulse {{
+    0% {{ opacity: 1; r: 12; }}
+    50% {{ opacity: 0.4; r: 20; }}
+    100% {{ opacity: 1; r: 12; }}
+  }}
+  @keyframes marker-blink {{
+    0%, 100% {{ fill-opacity: 0.9; stroke-width: 4; }}
+    50% {{ fill-opacity: 0.3; stroke-width: 2; }}
+  }}
+  .leaflet-marker-active {{
+    animation: marker-blink 0.8s ease-in-out infinite;
   }}
 </style>
 </head>
@@ -713,30 +730,45 @@ document.addEventListener("DOMContentLoaded", function() {{
   // Build listing-to-marker mapping from data
   var listingIndex = {json.dumps({str(i+1): l.get("id","") for i, l in enumerate(sorted(listings_data, key=lambda x: x.get("price_per_m2") or 99999))}, ensure_ascii=False)};
 
+  var pulseCircle = null;
+
   var observer = new IntersectionObserver(function(entries) {{
     entries.forEach(function(entry) {{
       if (entry.isIntersecting) {{
         var num = entry.target.getAttribute('data-listing-num');
         var id = listingIndex[num];
         if (id && markers[id]) {{
-          // Reset previous
+          // Reset previous marker
           if (activeMarker) {{
-            activeMarker.setStyle({{ weight: 2, radius: 7 }});
+            activeMarker.setStyle({{ weight: 2, radius: 7, fillOpacity: 0.8 }});
+            if (activeMarker._path) activeMarker._path.classList.remove('leaflet-marker-active');
           }}
-          // Highlight new
+          // Remove previous pulse circle
+          if (pulseCircle) {{ map.removeLayer(pulseCircle); }}
+
+          // Highlight new marker
           var m = markers[id];
-          m.setStyle({{ weight: 4, radius: 12 }});
+          m.setStyle({{ weight: 5, radius: 14, fillOpacity: 1, color: '#ff0000' }});
+          m.bringToFront();
+          if (m._path) m._path.classList.add('leaflet-marker-active');
+
+          // Add pulsing outer ring
+          pulseCircle = L.circleMarker(m.getLatLng(), {{
+            radius: 24, weight: 3, color: '#0274B6', fillColor: '#0274B6',
+            fillOpacity: 0.15, dashArray: '6 4', className: 'leaflet-marker-active'
+          }}).addTo(map);
+
           m.openPopup();
-          map.panTo(m.getLatLng(), {{ animate: true, duration: 0.5 }});
+          map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 11), {{ animate: true, duration: 0.8 }});
           activeMarker = m;
 
-          // Highlight card
+          // Highlight card with dashed border
           cards.forEach(function(c) {{ c.classList.remove('active-listing'); }});
           entry.target.classList.add('active-listing');
         }}
       }}
     }});
-  }}, {{ threshold: 0.5, rootMargin: '-20% 0px -60% 0px' }});
+  }}, {{ threshold: 0.3, rootMargin: '-10% 0px -50% 0px' }});
 
   cards.forEach(function(card) {{ observer.observe(card); }});
 }});

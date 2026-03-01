@@ -53,8 +53,25 @@ tailwind.config = {
     z-index: 1000 !important;
   }
   .listing-card.active-listing {
-    ring: 2px solid #0274B6;
-    box-shadow: 0 0 0 3px rgba(2, 116, 182, 0.3);
+    outline: 4px dashed #0274B6 !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 8px rgba(2, 116, 182, 0.15), 0 4px 20px rgba(2, 116, 182, 0.3) !important;
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+    z-index: 5;
+    position: relative;
+  }
+  @keyframes marker-pulse {
+    0% { opacity: 1; r: 12; }
+    50% { opacity: 0.4; r: 20; }
+    100% { opacity: 1; r: 12; }
+  }
+  @keyframes marker-blink {
+    0%, 100% { fill-opacity: 0.9; stroke-width: 4; }
+    50% { fill-opacity: 0.3; stroke-width: 2; }
+  }
+  .leaflet-marker-active {
+    animation: marker-blink 0.8s ease-in-out infinite;
   }
 </style>
 </head>
@@ -4040,30 +4057,45 @@ new Chart(document.getElementById("chart_2"), {"type": "scatter", "data": {"data
   // Build listing-to-marker mapping from data
   var listingIndex = {"1": "58220315", "2": "56901548", "3": "54163368", "4": "57412066", "5": "58413978", "6": "58220249", "7": "58213651", "8": "58395129", "9": "53238979", "10": "57784763", "11": "57784763", "12": "58369841", "13": "58226843", "14": "57844164", "15": "57189080", "16": "58141671", "17": "58219493", "18": "58247170", "19": "58193246", "20": "58466012", "21": "57840342", "22": "57433794", "23": "58055541", "24": "57095239", "25": "58133457", "26": "56880644", "27": "57346400", "28": "58020148", "29": "56662635", "30": "58049690", "31": "57935919", "32": "49096151", "33": "57900103", "34": "54458628", "35": "58195050", "36": "57821671", "37": "58195059", "38": "55670805", "39": "58424138", "40": "57239272", "41": "58195040", "42": "58218567", "43": "55151101", "44": "56234840", "45": "57247606", "46": "56458807", "47": "58195063", "48": "58259073", "49": "58259073", "50": "58195060", "51": "57136338", "52": "58220224", "53": "58445488", "54": "57108418", "55": "58253942", "56": "51926561", "57": "57459062", "58": "55336967", "59": "58197513", "60": "58252494", "61": "55499991", "62": "57925024", "63": "56586834", "64": "56517222", "65": "53276201", "66": "51555095", "67": "57821467", "68": "56084725", "69": "58195045", "70": "57916110", "71": "58434258", "72": "58276783", "73": "55212128", "74": "55212128", "75": "54503261", "76": "58128856", "77": "58450809", "78": "51554965", "79": "57794450", "80": "57908364", "81": "58436327", "82": "57987894", "83": "57663500", "84": "56654668", "85": "58075634", "86": "57345197", "87": "57709094", "88": "58010542", "89": "58389014", "90": "57071001", "91": "57868107", "92": "57108269", "93": "57609425", "94": "58377577", "95": "58155198", "96": "57564796", "97": "57195736", "98": "58155278", "99": "56615799", "100": "57822462", "101": "56655261", "102": "58062617", "103": "57413435", "104": "58075606", "105": "56594116", "106": "57883474", "107": "57647973", "108": "58267051", "109": "57313639", "110": "55875946", "111": "57615401", "112": "51458335", "113": "57090154", "114": "57696207", "115": "57413794", "116": "58226839", "117": "52553728", "118": "58444815", "119": "56630044", "120": "57225203", "121": "57956390", "122": "57413651", "123": "58161646", "124": "53905826", "125": "57821915", "126": "57986676", "127": "58075628", "128": "57345315", "129": "57825538", "130": "57249128", "131": "58292918", "132": "56867525", "133": "58076764", "134": "57124866", "135": "57070991", "136": "54491303", "137": "57516016", "138": "58140901", "139": "57821507", "140": "55540428", "141": "56899407", "142": "57872507", "143": "57872507", "144": "53857279", "145": "55276770", "146": "57968824", "147": "57751712"};
 
+  var pulseCircle = null;
+
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         var num = entry.target.getAttribute('data-listing-num');
         var id = listingIndex[num];
         if (id && markers[id]) {
-          // Reset previous
+          // Reset previous marker
           if (activeMarker) {
-            activeMarker.setStyle({ weight: 2, radius: 7 });
+            activeMarker.setStyle({ weight: 2, radius: 7, fillOpacity: 0.8 });
+            if (activeMarker._path) activeMarker._path.classList.remove('leaflet-marker-active');
           }
-          // Highlight new
+          // Remove previous pulse circle
+          if (pulseCircle) { map.removeLayer(pulseCircle); }
+
+          // Highlight new marker
           var m = markers[id];
-          m.setStyle({ weight: 4, radius: 12 });
+          m.setStyle({ weight: 5, radius: 14, fillOpacity: 1, color: '#ff0000' });
+          m.bringToFront();
+          if (m._path) m._path.classList.add('leaflet-marker-active');
+
+          // Add pulsing outer ring
+          pulseCircle = L.circleMarker(m.getLatLng(), {
+            radius: 24, weight: 3, color: '#0274B6', fillColor: '#0274B6',
+            fillOpacity: 0.15, dashArray: '6 4', className: 'leaflet-marker-active'
+          }).addTo(map);
+
           m.openPopup();
-          map.panTo(m.getLatLng(), { animate: true, duration: 0.5 });
+          map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 11), { animate: true, duration: 0.8 });
           activeMarker = m;
 
-          // Highlight card
+          // Highlight card with dashed border
           cards.forEach(function(c) { c.classList.remove('active-listing'); });
           entry.target.classList.add('active-listing');
         }
       }
     });
-  }, { threshold: 0.5, rootMargin: '-20% 0px -60% 0px' });
+  }, { threshold: 0.3, rootMargin: '-10% 0px -50% 0px' });
 
   cards.forEach(function(card) { observer.observe(card); });
 });
