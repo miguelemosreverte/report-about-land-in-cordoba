@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
 ZonaProp Crawler — Land listings in Córdoba, Argentina.
-Downloads images, ranks listings, generates a rich markdown report
-with Chart.js directives for the static HTML renderer.
+Two-pass scraper:
+  Pass 1: List pages → basic data + thumbnails
+  Pass 2: Individual listing pages → full description, extra photos, geocoding
+Generates enriched markdown report with Chart.js + Leaflet directives.
 """
 
 import json, os, re, time, random, hashlib, statistics
@@ -20,9 +22,50 @@ REPORT_FILE = "report.md"
 
 os.makedirs(IMG_DIR, exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+# ── Known geocoordinates for Córdoba locations ──
+# Fallback table; Nominatim is used first.
+KNOWN_COORDS = {
+    "Río Ceballos": (-31.164, -64.325),
+    "Unquillo": (-31.232, -64.317),
+    "Mendiolaza": (-31.269, -64.300),
+    "Villa Allende": (-31.295, -64.295),
+    "La Calera": (-31.345, -64.335),
+    "Villa Carlos Paz": (-31.424, -64.497),
+    "La Falda": (-31.093, -64.489),
+    "La Cumbre": (-30.982, -64.494),
+    "Cosquín": (-31.245, -64.469),
+    "Alta Gracia": (-31.662, -64.432),
+    "Villa Giardino": (-31.047, -64.498),
+    "Santa Rosa de Calamuchita": (-32.068, -64.537),
+    "Los Molinos": (-31.822, -64.607),
+    "Potrero de Garay": (-31.777, -64.538),
+    "Ascochinga": (-30.963, -64.265),
+    "San Antonio de Arredondo": (-31.482, -64.521),
+    "Estancia Vieja": (-31.398, -64.497),
+    "Malagueño": (-31.462, -64.361),
+    "Córdoba": (-31.420, -64.189),
+    "Monte Cristo": (-31.340, -63.944),
+    "Colonia Caroya": (-31.000, -64.088),
+    "Villa del Lago": (-31.418, -64.530),
+    "Santa María de Punilla": (-31.384, -64.464),
+    "Los Cocos": (-30.937, -64.506),
+    "San Roque": (-31.350, -64.450),
+    "Manantiales": (-31.490, -64.150),
+    "Nueva Córdoba": (-31.430, -64.185),
+    "General Paz": (-31.412, -64.185),
+    "Argüello": (-31.358, -64.240),
+    "Villa Warcalde": (-31.365, -64.280),
+    "Villa Rivera Indarte": (-31.360, -64.268),
+    "Inaudi": (-31.467, -64.150),
+    "DOCTA": (-31.462, -64.361),
+    "Villa Esquiú": (-31.468, -64.140),
+    "Observatorio": (-31.423, -64.192),
+    "Centro": (-31.417, -64.183),
+    "Colón": (-31.003, -64.100),
+    "Río Segundo": (-31.654, -63.913),
+}
+
+# ── Helpers ──
 
 def parse_price(text):
     if not text:
@@ -52,21 +95,14 @@ def parse_size(text):
     return None
 
 
-def slug(text, maxlen=60):
-    s = re.sub(r"[^\w\s-]", "", text.lower())
-    s = re.sub(r"[\s_]+", "-", s).strip("-")
-    return s[:maxlen]
-
-
-def download_image(url, listing_id):
-    """Download an image and return the local relative path, or None."""
+def download_image(url, name):
     if not url or url.startswith("data:"):
         return None
     try:
         ext = os.path.splitext(urlparse(url).path)[1] or ".jpg"
         if ext not in (".jpg", ".jpeg", ".png", ".webp", ".avif"):
             ext = ".jpg"
-        fname = f"{listing_id}{ext}"
+        fname = f"{name}{ext}"
         fpath = os.path.join(IMG_DIR, fname)
         if os.path.exists(fpath) and os.path.getsize(fpath) > 500:
             return f"{IMG_DIR}/{fname}"
@@ -84,20 +120,58 @@ def download_image(url, listing_id):
     return None
 
 
-# ---------------------------------------------------------------------------
-# Scraper
-# ---------------------------------------------------------------------------
+def geocode_nominatim(query):
+    """Geocode via Nominatim (respect 1 req/s)."""
+    try:
+        r = requests.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={"q": query, "format": "json", "limit": 1,
+                    "countrycodes": "ar"},
+            headers={"User-Agent": "cordoba-land-report/1.0"},
+            timeout=10,
+        )
+        data = r.json()
+        if data:
+            return float(data[0]["lat"]), float(data[0]["lon"])
+    except Exception:
+        pass
+    return None
+
+
+def geocode_location(location_str):
+    """Try known coords, then Nominatim."""
+    parts = [p.strip() for p in location_str.split(",")]
+    name = parts[0]
+
+    # Try known coords
+    if name in KNOWN_COORDS:
+        return KNOWN_COORDS[name]
+
+    # Try Nominatim with full string + Córdoba
+    query = f"{location_str}, Córdoba, Argentina"
+    coords = geocode_nominatim(query)
+    if coords:
+        time.sleep(1.1)  # respect rate limit
+        return coords
+
+    # Try just the neighborhood name
+    coords = geocode_nominatim(f"{name}, Córdoba, Argentina")
+    if coords:
+        time.sleep(1.1)
+        return coords
+
+    return None
+
+
+# ── Pass 1: List page scraping ──
 
 def scrape_page(page, url):
     print(f"  → {url}")
     page.goto(url, wait_until="domcontentloaded", timeout=30000)
     time.sleep(random.uniform(2, 4))
 
-    # dismiss popups
-    for sel in [
-        'button:has-text("Aceptar")', 'button:has-text("Entendido")',
-        'button:has-text("Cerrar")', '[class*="cookie"] button',
-    ]:
+    for sel in ['button:has-text("Aceptar")', 'button:has-text("Entendido")',
+                'button:has-text("Cerrar")', '[class*="cookie"] button']:
         try:
             btn = page.query_selector(sel)
             if btn and btn.is_visible():
@@ -111,43 +185,36 @@ def scrape_page(page, url):
         timeout=15000,
     )
 
-    cards = (
-        page.query_selector_all('[data-qa="posting PROPERTY"]')
-        or page.query_selector_all('.postingCardLayout')
-        or page.query_selector_all('[class*="postingCard"]')
-        or page.query_selector_all('article[data-id]')
-        or page.query_selector_all('[data-posting-type]')
-    )
+    cards = (page.query_selector_all('[data-qa="posting PROPERTY"]')
+             or page.query_selector_all('.postingCardLayout')
+             or page.query_selector_all('[class*="postingCard"]')
+             or page.query_selector_all('article[data-id]')
+             or page.query_selector_all('[data-posting-type]'))
     print(f"  cards: {len(cards)}")
     listings = []
 
     for card in cards:
         try:
             l = {}
-            # title
             el = (card.query_selector('[data-qa="POSTING_CARD_DESCRIPTION"]')
                   or card.query_selector('h2')
                   or card.query_selector('[class*="title"]'))
             l["title"] = el.inner_text().strip() if el else ""
 
-            # location
             el = (card.query_selector('[data-qa="POSTING_CARD_LOCATION"]')
                   or card.query_selector('[class*="location"]'))
             l["location"] = el.inner_text().strip() if el else ""
 
-            # price
             el = (card.query_selector('[data-qa="POSTING_CARD_PRICE"]')
                   or card.query_selector('[class*="price"]'))
             price_text = el.inner_text().strip() if el else ""
             l["price_text"] = price_text
             l["price_value"], l["currency"] = parse_price(price_text)
 
-            # size — prefer "total" surface
             feats = card.query_selector_all(
                 '[data-qa="POSTING_CARD_FEATURES"] span, '
                 '[class*="postingCardFeatures"] span, '
-                '[class*="feature"] span'
-            )
+                '[class*="feature"] span')
             size_text = ""
             for fe in feats:
                 t = fe.inner_text()
@@ -162,7 +229,6 @@ def scrape_page(page, url):
             l["size_text"] = size_text
             l["size_m2"] = parse_size(size_text)
 
-            # link
             a = (card.query_selector('a[href*="/terreno"], a[href*="/lote"], '
                                      'a[href*="/propiedad"]')
                  or card.query_selector('a[href]'))
@@ -171,17 +237,13 @@ def scrape_page(page, url):
                 href = BASE_URL + href
             l["link"] = href
 
-            # image URL — try multiple strategies
             img_url = None
             img_el = card.query_selector(
                 'img[src*="img"], img[data-src], img[src*="zonaprop"], '
-                'img[src*="clasificado"], img[src*="http"]'
-            )
+                'img[src*="clasificado"], img[src*="http"]')
             if img_el:
-                img_url = (img_el.get_attribute("data-src")
-                           or img_el.get_attribute("src"))
+                img_url = img_el.get_attribute("data-src") or img_el.get_attribute("src")
             if not img_url:
-                # try picture > source
                 src_el = card.query_selector("picture source[srcset]")
                 if src_el:
                     srcset = src_el.get_attribute("srcset") or ""
@@ -189,21 +251,25 @@ def scrape_page(page, url):
                     if parts:
                         img_url = parts[-1].strip().split(" ")[0]
             if not img_url:
-                # try any img
                 any_img = card.query_selector("img[src]")
                 if any_img:
                     img_url = any_img.get_attribute("src")
             l["image_url"] = img_url or ""
 
-            # price/m²
             if l["price_value"] and l["size_m2"] and l["size_m2"] > 0:
                 l["price_per_m2"] = round(l["price_value"] / l["size_m2"], 2)
             else:
                 l["price_per_m2"] = None
 
-            # unique id from URL or hash
             m = re.search(r"-(\d{6,})\.html", href)
             l["id"] = m.group(1) if m else hashlib.md5(href.encode()).hexdigest()[:10]
+
+            # Will be filled in pass 2
+            l["description"] = ""
+            l["extra_images"] = []
+            l["features"] = []
+            l["lat"] = None
+            l["lng"] = None
 
             listings.append(l)
         except Exception as e:
@@ -212,16 +278,81 @@ def scrape_page(page, url):
     return listings
 
 
-# ---------------------------------------------------------------------------
-# Report generation
-# ---------------------------------------------------------------------------
+# ── Pass 2: Individual listing detail scraping ──
+
+def scrape_detail(page, listing):
+    """Visit individual listing page for richer data."""
+    url = listing.get("link")
+    if not url:
+        return listing
+
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=20000)
+        time.sleep(random.uniform(1.5, 3))
+
+        # Full description
+        desc_el = (page.query_selector('[class*="section-description"] p')
+                   or page.query_selector('[data-qa="POSTING_DESCRIPTION"]')
+                   or page.query_selector('[class*="description"]'))
+        if desc_el:
+            listing["description"] = desc_el.inner_text().strip()[:500]
+
+        # Features list
+        feat_els = page.query_selector_all(
+            '[class*="feature-item"], [class*="icon-feature"] + span, '
+            '[data-qa*="FEATURE"] span')
+        listing["features"] = list(set(
+            f.inner_text().strip() for f in feat_els if f.inner_text().strip()
+        ))[:15]
+
+        # Extra images (up to 5)
+        img_els = page.query_selector_all(
+            '[class*="gallery"] img, [class*="carousel"] img, '
+            '[class*="slider"] img, [class*="photo"] img')
+        seen = {listing.get("image_url", "")}
+        extra = []
+        for img in img_els:
+            src = img.get_attribute("data-src") or img.get_attribute("src") or ""
+            if src and src not in seen and not src.startswith("data:") and "logo" not in src:
+                seen.add(src)
+                extra.append(src)
+            if len(extra) >= 5:
+                break
+        listing["extra_images"] = extra
+
+    except Exception as e:
+        print(f"    detail-err ({listing['id']}): {e}")
+
+    return listing
+
+
+# ── Geocoding pass ──
+
+def geocode_all(listings):
+    """Geocode all listings, caching by location string."""
+    cache = {}
+    for i, l in enumerate(listings):
+        loc = l["location"]
+        if loc in cache:
+            l["lat"], l["lng"] = cache[loc]
+        else:
+            coords = geocode_location(loc)
+            if coords:
+                l["lat"], l["lng"] = coords
+                cache[loc] = coords
+                print(f"  [{i+1}] ✓ {loc} → ({coords[0]:.4f}, {coords[1]:.4f})")
+            else:
+                cache[loc] = (None, None)
+                print(f"  [{i+1}] ✗ {loc} → no coords")
+    return listings
+
+
+# ── Rankings ──
 
 def compute_rankings(data):
-    """Return dict of ranking lists."""
     usd = [l for l in data if l.get("price_value") and l["currency"] == "USD"]
-    sized = [l for l in data if l.get("size_m2")]
     both = [l for l in data if l.get("price_per_m2") and l["currency"] == "USD"]
-
+    sized = [l for l in data if l.get("size_m2")]
     return {
         "cheapest_total": sorted(usd, key=lambda x: x["price_value"])[:15],
         "most_expensive": sorted(usd, key=lambda x: -x["price_value"])[:10],
@@ -233,7 +364,6 @@ def compute_rankings(data):
 
 
 def _best_value(listings):
-    """Composite score: prefer lower price/m², reasonable size, USD."""
     if not listings:
         return []
     max_ppm = max(l["price_per_m2"] for l in listings) or 1
@@ -241,7 +371,7 @@ def _best_value(listings):
     scored = []
     for l in listings:
         ppm_score = 1 - (l["price_per_m2"] / max_ppm)
-        size_score = min((l.get("size_m2", 0) / 2000), 1.0)  # sweet-spot ~2000m²
+        size_score = min((l.get("size_m2", 0) / 2000), 1.0)
         score = ppm_score * 0.65 + size_score * 0.35
         scored.append({**l, "_score": round(score, 3)})
     return sorted(scored, key=lambda x: -x["_score"])
@@ -260,8 +390,7 @@ def zone_stats(data):
         prices = [i["price_value"] for i in items]
         sizes = [i["size_m2"] for i in items if i.get("size_m2")]
         result.append({
-            "zone": z,
-            "count": len(items),
+            "zone": z, "count": len(items),
             "avg_ppm": round(statistics.mean(ppms), 2),
             "min_ppm": round(min(ppms), 2),
             "max_ppm": round(max(ppms), 2),
@@ -271,26 +400,26 @@ def zone_stats(data):
     return sorted(result, key=lambda x: x["avg_ppm"])
 
 
+# ── Report generation ──
+
 def listing_card_md(l, rank=None):
-    """Render a single listing as a markdown 'card'."""
     rank_str = f"**#{rank}** — " if rank else ""
     img = f"![{l['location']}]({l['image_local']})" if l.get("image_local") else ""
     price = l.get("price_text", "N/A")
     size = f"{l['size_m2']:,.0f} m²" if l.get("size_m2") else l.get("size_text", "N/A")
     ppm = f"USD {l['price_per_m2']:,.2f}/m²" if l.get("price_per_m2") else ""
     link = f"[Ver publicación]({l['link']})" if l.get("link") else ""
-    lines = [
-        img,
-        "",
-        f"{rank_str}**{l.get('location', 'N/A')}**",
-        "",
-        f"- **Precio:** {price}",
-        f"- **Superficie:** {size}",
-    ]
+    desc = l.get("description", "")[:200]
+    lines = [img, "",
+             f"{rank_str}**{l.get('location', 'N/A')}**", "",
+             f"- **Precio:** {price}",
+             f"- **Superficie:** {size}"]
     if ppm:
         lines.append(f"- **Precio/m²:** {ppm}")
     if l.get("title"):
         lines.append(f"- {l['title'][:120]}")
+    if desc:
+        lines.append(f"- {desc}")
     lines.append(f"- {link}")
     lines.append("")
     return "\n".join(lines)
@@ -305,7 +434,6 @@ def generate_report(data, rankings, zones):
     L = []
     w = L.append
 
-    # ── Header ──
     w("# Terrenos en Venta en Córdoba")
     w("")
     w(f"**Reporte de mercado** · {now} · Fuente: [zonaprop.com.ar]({SEARCH_URL})")
@@ -313,7 +441,7 @@ def generate_report(data, rankings, zones):
     w("---")
     w("")
 
-    # ── Summary stats ──
+    # Summary
     w("## Resumen del Mercado")
     w("")
     if usd:
@@ -332,10 +460,9 @@ def generate_report(data, rankings, zones):
         w(f"- **Precio/m² mediano (USD):** ${statistics.median(ppms):,.2f}")
     w("")
 
-    # ── Charts ──
+    # Charts
     w("## Distribución de Precios")
     w("")
-    # Price histogram
     if usd:
         buckets = {}
         for l in usd:
@@ -355,93 +482,65 @@ def generate_report(data, rankings, zones):
         values = [buckets[b] for b in labels]
         chart1 = {
             "type": "bar",
-            "data": {
-                "labels": labels,
-                "datasets": [{
-                    "label": "Cantidad de terrenos",
-                    "data": values,
-                    "backgroundColor": "rgba(2, 116, 182, 0.75)",
-                    "borderColor": "rgba(2, 116, 182, 1)",
-                    "borderWidth": 1,
-                }]
-            },
-            "options": {
-                "plugins": {"title": {"display": True,
-                    "text": "Distribución de Precios (USD)"}},
+            "data": {"labels": labels, "datasets": [{
+                "label": "Cantidad de terrenos", "data": values,
+                "backgroundColor": "rgba(2, 116, 182, 0.75)",
+                "borderColor": "rgba(2, 116, 182, 1)", "borderWidth": 1}]},
+            "options": {"plugins": {"title": {"display": True,
+                "text": "Distribución de Precios (USD)"}},
                 "scales": {"y": {"beginAtZero": True,
                     "title": {"display": True, "text": "Cantidad"}},
-                    "x": {"title": {"display": True, "text": "Rango de precio"}}},
-            }
+                    "x": {"title": {"display": True, "text": "Rango de precio"}}}}
         }
         w("```chart")
         w(json.dumps(chart1, ensure_ascii=False))
         w("```")
         w("")
 
-    # Price per m² by zone (top 20 zones)
     if zones:
         top_zones = zones[:20]
         chart2 = {
             "type": "bar",
-            "data": {
-                "labels": [z["zone"][:25] for z in top_zones],
-                "datasets": [{
-                    "label": "Precio/m² promedio (USD)",
-                    "data": [z["avg_ppm"] for z in top_zones],
-                    "backgroundColor": "rgba(34, 139, 34, 0.65)",
-                    "borderColor": "rgba(34, 139, 34, 1)",
-                    "borderWidth": 1,
-                }]
-            },
-            "options": {
-                "indexAxis": "y",
+            "data": {"labels": [z["zone"][:25] for z in top_zones],
+                     "datasets": [{"label": "Precio/m² promedio (USD)",
+                        "data": [z["avg_ppm"] for z in top_zones],
+                        "backgroundColor": "rgba(34, 139, 34, 0.65)",
+                        "borderColor": "rgba(34, 139, 34, 1)", "borderWidth": 1}]},
+            "options": {"indexAxis": "y",
                 "plugins": {"title": {"display": True,
                     "text": "Precio/m² por Zona (más económicas primero)"}},
                 "scales": {"x": {"beginAtZero": True,
-                    "title": {"display": True, "text": "USD/m²"}}},
-            }
+                    "title": {"display": True, "text": "USD/m²"}}}}
         }
         w("```chart")
         w(json.dumps(chart2, ensure_ascii=False))
         w("```")
         w("")
 
-    # Scatter: size vs price
     if both:
         scatter_data = [{"x": l["size_m2"], "y": l["price_value"]}
                         for l in both if l["size_m2"] < 15000 and l["price_value"] < 500000]
         chart3 = {
             "type": "scatter",
-            "data": {
-                "datasets": [{
-                    "label": "Superficie vs Precio",
-                    "data": scatter_data,
-                    "backgroundColor": "rgba(2, 116, 182, 0.5)",
-                    "pointRadius": 5,
-                }]
-            },
-            "options": {
-                "plugins": {"title": {"display": True,
-                    "text": "Relación Superficie vs Precio (< 500K USD, < 15.000 m²)"}},
-                "scales": {
-                    "x": {"title": {"display": True, "text": "Superficie (m²)"}},
+            "data": {"datasets": [{"label": "Superficie vs Precio",
+                "data": scatter_data,
+                "backgroundColor": "rgba(2, 116, 182, 0.5)", "pointRadius": 5}]},
+            "options": {"plugins": {"title": {"display": True,
+                "text": "Relación Superficie vs Precio (< 500K USD, < 15.000 m²)"}},
+                "scales": {"x": {"title": {"display": True, "text": "Superficie (m²)"}},
                     "y": {"title": {"display": True, "text": "Precio (USD)"},
-                           "beginAtZero": True},
-                }
-            }
+                           "beginAtZero": True}}}
         }
         w("```chart")
         w(json.dumps(chart3, ensure_ascii=False))
         w("```")
         w("")
 
-    # ── Rankings ──
+    # Rankings
     w("---")
     w("")
     w("## Rankings")
     w("")
-
-    # Best value
     w("### Mejor Relación Calidad-Precio")
     w("")
     w("> Score compuesto: 65% precio/m² + 35% tamaño óptimo (~2.000 m²)")
@@ -451,8 +550,6 @@ def generate_report(data, rankings, zones):
 
     w("---")
     w("")
-
-    # Cheapest per m²
     w("### Más Económicos por m²")
     w("")
     for i, l in enumerate(rankings["cheapest_per_m2"][:10], 1):
@@ -460,8 +557,6 @@ def generate_report(data, rankings, zones):
 
     w("---")
     w("")
-
-    # Cheapest absolute
     w("### Más Económicos (precio total)")
     w("")
     for i, l in enumerate(rankings["cheapest_total"][:10], 1):
@@ -469,8 +564,6 @@ def generate_report(data, rankings, zones):
 
     w("---")
     w("")
-
-    # Largest
     w("### Terrenos Más Grandes")
     w("")
     for i, l in enumerate(rankings["largest"][:10], 1):
@@ -479,7 +572,7 @@ def generate_report(data, rankings, zones):
     w("---")
     w("")
 
-    # ── Zone analysis table ──
+    # Zone analysis
     w("## Análisis por Zona")
     w("")
     w("| Zona | Cant. | Precio/m² Prom. | Precio/m² Mín. | Precio/m² Máx. | Precio Prom. | Sup. Prom. |")
@@ -490,7 +583,7 @@ def generate_report(data, rankings, zones):
           f"| ${z['avg_price']:,} | {z['avg_size']:,} m² |")
     w("")
 
-    # ── Full listing table ──
+    # Full listing table
     w("---")
     w("")
     w("## Listado Completo")
@@ -508,7 +601,6 @@ def generate_report(data, rankings, zones):
         w(f"| {i} | {img} | {loc} | {sz} | {pr} | {ppm} | {link} |")
     w("")
 
-    # ── Footer ──
     w("---")
     w("")
     w("*Reporte generado automáticamente. Precios y disponibilidad sujetos a cambios. "
@@ -518,13 +610,11 @@ def generate_report(data, rankings, zones):
     return "\n".join(L)
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
+# ── Main ──
 
 def main():
     print("=" * 60)
-    print(" ZonaProp Crawler — Terrenos en Córdoba")
+    print(" ZonaProp Crawler — Terrenos en Córdoba (Enhanced)")
     print("=" * 60)
 
     all_listings = []
@@ -533,14 +623,13 @@ def main():
         browser = p.chromium.launch(headless=False)
         ctx = browser.new_context(
             viewport={"width": 1366, "height": 900},
-            user_agent=(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            ),
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                       "AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
         )
         page = ctx.new_page()
 
+        # ── PASS 1: List pages ──
+        print("\n── PASS 1: Scraping list pages ──")
         for pn in range(1, MAX_PAGES + 1):
             url = SEARCH_URL if pn == 1 else \
                 f"{BASE_URL}/terrenos-venta-cordoba-pagina-{pn}.html"
@@ -557,25 +646,45 @@ def main():
                 page.screenshot(path=f"debug_p{pn}.png")
                 break
 
+        # ── PASS 2: Detail pages (sample up to 50 for speed) ──
+        print(f"\n── PASS 2: Scraping detail pages (up to 50) ──")
+        detail_count = min(50, len(all_listings))
+        for i in range(detail_count):
+            l = all_listings[i]
+            print(f"  [{i+1}/{detail_count}] {l['id']} — {l['location'][:40]}")
+            scrape_detail(page, l)
+            time.sleep(random.uniform(0.5, 1.5))
+
         browser.close()
 
-    print(f"\nListings scraped: {len(all_listings)}")
+    # ── PASS 3: Geocoding ──
+    print(f"\n── PASS 3: Geocoding {len(all_listings)} listings ──")
+    geocode_all(all_listings)
 
-    # Download images
-    print("\nDownloading images …")
+    # ── PASS 4: Download images ──
+    print(f"\n── PASS 4: Downloading images ──")
     for i, l in enumerate(all_listings):
+        # Main thumbnail
         local = download_image(l.get("image_url"), l["id"])
         l["image_local"] = local
-        if local:
-            print(f"  [{i+1}/{len(all_listings)}] ✓ {local}")
-        else:
-            print(f"  [{i+1}/{len(all_listings)}] – no image")
-        time.sleep(random.uniform(0.1, 0.3))
 
-    # Save raw JSON
+        # Extra images from detail page
+        extra_locals = []
+        for j, eurl in enumerate(l.get("extra_images", [])):
+            elocal = download_image(eurl, f"{l['id']}_extra{j}")
+            if elocal:
+                extra_locals.append(elocal)
+        l["extra_images_local"] = extra_locals
+
+        status = "✓" if local else "–"
+        extras = f" +{len(extra_locals)}" if extra_locals else ""
+        print(f"  [{i+1}/{len(all_listings)}] {status}{extras} {l['id']}")
+        time.sleep(random.uniform(0.05, 0.2))
+
+    # Save JSON
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(all_listings, f, ensure_ascii=False, indent=2)
-    print(f"Data saved: {DATA_FILE}")
+    print(f"\nData saved: {DATA_FILE}")
 
     # Generate report
     rankings = compute_rankings(all_listings)

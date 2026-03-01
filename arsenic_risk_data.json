@@ -1,0 +1,512 @@
+{
+  "metadata": {
+    "title": "Arsenic Contamination Risk Assessment - Córdoba Province, Argentina",
+    "date_compiled": "2026-02-28",
+    "disclaimer": "Risk classifications are based on published hydrogeological studies, geological context, and government water quality data available through 2024. Actual arsenic levels vary by well depth, specific aquifer tapped, and local geology. Always test individual water sources before consumption.",
+    "key_references": [
+      "Nicolli et al. (2012) 'Arsenic hydrogeochemistry in groundwater from the Burruyacú basin, Tucumán province, Argentina' and related Chaco-Pampean studies",
+      "Bundschuh et al. (2004) 'Groundwater arsenic in the Chaco-Pampean Plain, Argentina'",
+      "Smedley et al. (2002) 'A review of the source, behaviour and distribution of arsenic in natural waters'",
+      "Nicolli et al. (2010) 'Groundwater contamination with arsenic and other trace elements in an area of the Pampa, Province of Córdoba, Argentina'",
+      "Cabrera et al. (2001) 'Geogenic arsenic in groundwaters from southeastern Córdoba province'",
+      "García et al. (2020) 'Arsenic in drinking water in Córdoba: risk assessment and spatial distribution'",
+      "ENRESS/ERAS provincial water quality reports",
+      "Código Alimentario Argentino (CAA) - Chapter XII, Article 982"
+    ]
+  },
+
+  "regulatory_standards": {
+    "WHO": {
+      "guideline_value_ug_L": 10,
+      "notes": "WHO provisional guideline value for arsenic in drinking water, established 1993, reaffirmed in 4th edition Guidelines for Drinking-water Quality (2011, updated 2022). Termed 'provisional' because of practical difficulties in removing arsenic to below this level and the analytical measurement uncertainties."
+    },
+    "Argentina_national_CAA": {
+      "current_limit_ug_L": 10,
+      "notes": "Argentina's Código Alimentario Argentino (CAA), Article 982, was amended in 2007 to adopt the WHO guideline of 10 μg/L (0.01 mg/L). Previously the limit was 50 μg/L. Full compliance deadline has been extended multiple times due to the enormity of the challenge in the Chaco-Pampean region. Many provinces still operationally reference 50 μg/L as an interim standard.",
+      "previous_limit_ug_L": 50,
+      "interim_situation": "Many water utilities in affected regions still exceed the 10 μg/L standard. Compliance with the stricter standard remains incomplete across most of the Chaco-Pampean plain."
+    },
+    "Cordoba_provincial": {
+      "notes": "Córdoba province follows the CAA standard (10 μg/L) but in practice many rural and peri-urban water sources exceed this. The provincial water utility (Aguas Cordobesas for capital city, cooperatives elsewhere) monitors but enforcement varies."
+    },
+    "EPA_US_reference": {
+      "MCL_ug_L": 10,
+      "notes": "For reference, the US EPA Maximum Contaminant Level is also 10 μg/L, established in 2001."
+    }
+  },
+
+  "chaco_pampean_aquifer_context": {
+    "overview": "The Chaco-Pampean plain is one of the largest regions of naturally occurring arsenic contamination in groundwater in the world. It spans approximately 1 million km² across central-northern Argentina, affecting provinces including Buenos Aires, Córdoba, Santa Fe, Santiago del Estero, Tucumán, Chaco, Salta, La Pampa, and San Luis.",
+    "geological_origin": "Arsenic is primarily of volcanic origin, derived from Quaternary loess deposits (wind-blown volcanic ash from Andean eruptions) that blanket the Pampean plains. The arsenic is associated with volcanic glass shards and iron/manganese oxides in the sediments. Under the alkaline, oxidizing conditions typical of Pampean groundwater (pH 7.5-8.5), arsenic is mobilized as arsenate (As(V)) through desorption from iron oxides at high pH.",
+    "typical_concentrations": "Groundwater arsenic in the Chaco-Pampean plain ranges widely from <10 to >5000 μg/L, with most affected areas showing 50-300 μg/L. The SE Córdoba plain (departments like Marcos Juárez, Unión, Juárez Celman) is among the most severely affected zones.",
+    "affected_population": "An estimated 4-8 million people in Argentina are exposed to arsenic above 10 μg/L in their drinking water. This has led to endemic arsenicosis (HACRE - Hidroarsenicismo Crónico Regional Endémico), historically known in Argentina since the early 1900s.",
+    "cordoba_specifics": "Córdoba province has a stark geological divide: the Sierras de Córdoba (crystalline basement ranges) to the west provide low-arsenic groundwater from fractured rock aquifers, while the eastern plains (Pampa Cordobesa) overlie loess-derived sediments with high arsenic. The transition zone runs roughly along the eastern piedmont of the Sierras."
+  },
+
+  "cordoba_zones_overview": {
+    "sierras_zone": {
+      "description": "The Sierras de Córdoba (including Sierras Chicas, Sierras Grandes, Sierras de Comechingones, and Sierras del Norte) are composed of Precambrian-Paleozoic crystalline basement rocks (gneiss, schist, granite, migmatite). Groundwater in these areas circulates through fractured rock aquifers and alluvial valleys that are geologically distinct from the loess-derived Pampean sediments.",
+      "arsenic_status": "Generally LOW arsenic. Typical values <10 μg/L, often <5 μg/L. Water quality issues in Sierras tend to relate to bacteriological contamination or seasonal turbidity rather than arsenic.",
+      "water_sources": "Mix of municipal water from reservoirs/dams (e.g., San Roque, Los Molinos, Río Tercero dams), springs, and shallow wells in fractured rock."
+    },
+    "piedmont_transition_zone": {
+      "description": "The eastern foothills/piedmont of the Sierras where the crystalline basement transitions to Pampean sedimentary cover. Cities like Córdoba capital sit in this transition zone.",
+      "arsenic_status": "LOW to MODERATE. Western parts of Córdoba city (closer to Sierras) generally have low arsenic in tap water (supplied from dams). Southern and eastern periphery may have elevated arsenic where sedimentary aquifers are tapped. Municipal treated water from Suquía River/San Roque dam is generally safe.",
+      "water_sources": "Córdoba capital: primarily surface water from Suquía River (fed by San Roque dam), treated by Aguas Cordobesas. Peripheral neighborhoods may rely on groundwater."
+    },
+    "eastern_plains_zone": {
+      "description": "The flat Pampa Cordobesa east and southeast of the Sierras, including departments like Marcos Juárez, Unión, General San Martín, Juárez Celman, Tercero Arriba (eastern parts), Río Segundo, and San Justo.",
+      "arsenic_status": "HIGH arsenic risk. This is the core of the Chaco-Pampean arsenic belt in Córdoba. Groundwater typically 50-500+ μg/L As. Many rural communities rely entirely on groundwater wells.",
+      "water_sources": "Primarily groundwater from Pampean loess aquifer. Some larger towns have begun connecting to surface water pipelines or installing reverse osmosis treatment."
+    }
+  },
+
+  "location_risk_assessment": {
+    "_classification_criteria": {
+      "low": "Arsenic typically <10 μg/L (meets WHO/CAA standard). Area within crystalline Sierras or supplied by treated surface water from reservoirs.",
+      "low_moderate": "Arsenic typically <10-20 μg/L. Transition zone or area generally safe but with some localized variability. Municipal supply meets standards but private wells may not.",
+      "medium": "Arsenic may range 10-50 μg/L in some groundwater sources. Transition zone geology, or plains areas with some mitigation/treatment.",
+      "high": "Arsenic commonly >50 μg/L in groundwater, frequently >100 μg/L. Full Pampean loess aquifer zone."
+    },
+
+    "sierras_towns": {
+      "Rio_Ceballos": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas",
+        "department": "Colón",
+        "geology": "Crystalline basement (gneiss/schist), fractured rock aquifer",
+        "water_supply": "Municipal water cooperative, surface water sources + wells in fractured rock",
+        "notes": "Located in the Sierras Chicas at ~700m elevation. Groundwater from crystalline rock is naturally low in arsenic."
+      },
+      "Unquillo": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas",
+        "department": "Colón",
+        "geology": "Crystalline basement, fractured rock aquifer",
+        "water_supply": "Municipal cooperative, surface and groundwater from Sierras",
+        "notes": "Similar geological setting to Río Ceballos. Low arsenic risk."
+      },
+      "Mendiolaza": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas eastern piedmont",
+        "department": "Colón",
+        "geology": "Piedmont of Sierras Chicas, transition but still predominantly crystalline-sourced water",
+        "water_supply": "Cooperative water supply",
+        "notes": "While closer to the plains than Unquillo/Río Ceballos, Mendiolaza still benefits from Sierras Chicas geology. Gated communities typically have their own wells in crystalline rock or connect to municipal supply."
+      },
+      "Villa_Allende": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas eastern piedmont",
+        "department": "Colón",
+        "geology": "Eastern piedmont of Sierras Chicas",
+        "water_supply": "Municipal water cooperative, primarily surface water from Sierras",
+        "notes": "Well-established town at the base of Sierras Chicas. Low arsenic in municipal supply."
+      },
+      "La_Calera": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas",
+        "department": "Colón",
+        "geology": "Crystalline basement with limestone/marble (Calera = limestone quarry)",
+        "water_supply": "Municipal supply from Mal Paso dam and wells",
+        "notes": "Located within Sierras Chicas. Calcium-rich geology (limestone) can actually help immobilize arsenic. Low risk."
+      },
+      "Villa_Carlos_Paz": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Sierras Grandes / Valle de Punilla",
+        "department": "Punilla",
+        "geology": "Crystalline basement, adjacent to San Roque dam",
+        "water_supply": "Surface water from San Roque reservoir, treated municipal supply",
+        "notes": "Major tourist city on the shore of San Roque dam. Excellent water quality regarding arsenic."
+      },
+      "Cosquin": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Valle de Punilla",
+        "department": "Punilla",
+        "geology": "Crystalline basement of Sierras Grandes",
+        "water_supply": "Municipal supply from river/dam sources",
+        "notes": "Punilla Valley town on crystalline basement. Low arsenic."
+      },
+      "La_Falda": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Valle de Punilla / Sierras Chicas north",
+        "department": "Punilla",
+        "geology": "Crystalline basement",
+        "water_supply": "Municipal water from Sierras sources",
+        "notes": "Northern Punilla Valley. Crystalline rock aquifer, low arsenic."
+      },
+      "La_Cumbre": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Sierras Chicas / Punilla norte",
+        "department": "Punilla",
+        "geology": "Crystalline basement at higher elevation (~1100m)",
+        "water_supply": "Springs and mountain water sources",
+        "notes": "High-altitude Sierras town. Excellent groundwater quality, very low arsenic."
+      },
+      "Villa_Giardino": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Punilla norte / Sierras",
+        "department": "Punilla",
+        "geology": "Crystalline basement",
+        "water_supply": "Mountain springs and wells in fractured rock",
+        "notes": "Small Sierras town near La Cumbre. Very low arsenic risk."
+      },
+      "Alta_Gracia": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas southern piedmont",
+        "department": "Santa María",
+        "geology": "Piedmont/crystalline basement transition",
+        "water_supply": "Municipal supply from Los Molinos dam pipeline and local sources",
+        "notes": "Important city south of Córdoba, at the eastern foot of the Sierras. Benefits from surface water supply from Los Molinos dam. Low arsenic."
+      },
+      "Santa_Rosa_de_Calamuchita": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Valle de Calamuchita / Sierras",
+        "department": "Calamuchita",
+        "geology": "Crystalline basement (Sierras de Comechingones)",
+        "water_supply": "River and dam-sourced municipal water",
+        "notes": "Located in the Calamuchita Valley within the Sierras. Very clean water, low arsenic."
+      },
+      "Los_Molinos": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Calamuchita / Sierras",
+        "department": "Calamuchita",
+        "geology": "Crystalline basement, adjacent to Los Molinos dam",
+        "water_supply": "Surface water from Los Molinos reservoir",
+        "notes": "Located next to the Los Molinos dam. Pristine Sierras water, very low arsenic."
+      },
+      "Potrero_de_Garay": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Calamuchita / Sierras",
+        "department": "Santa María",
+        "geology": "Crystalline basement, between Los Molinos and San Roque dams",
+        "water_supply": "Local wells in fractured rock, proximity to Los Molinos reservoir",
+        "notes": "Small Sierras community near Los Molinos dam. Very low arsenic."
+      },
+      "Ascochinga": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Sierras Chicas norte",
+        "department": "Colón",
+        "geology": "Crystalline basement of northern Sierras Chicas",
+        "water_supply": "Local wells and springs in crystalline rock",
+        "notes": "Small historic town in northern Sierras Chicas. Low arsenic in crystalline rock aquifer."
+      },
+      "San_Antonio_de_Arredondo": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Sierras / near San Roque",
+        "department": "Punilla",
+        "geology": "Crystalline basement, near San Roque dam",
+        "water_supply": "Municipal supply from Sierras sources",
+        "notes": "Small town near Villa Carlos Paz and San Roque dam. Crystalline Sierras geology, low arsenic."
+      },
+      "Estancia_Vieja": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Sierras / near Villa Carlos Paz",
+        "department": "Punilla",
+        "geology": "Crystalline basement",
+        "water_supply": "Local and municipal sources from Sierras",
+        "notes": "Small community adjacent to Villa Carlos Paz. Same geological setting, low arsenic."
+      },
+      "Santa_Maria_de_Punilla": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-10",
+        "zone": "Valle de Punilla",
+        "department": "Punilla",
+        "geology": "Crystalline basement",
+        "water_supply": "Municipal supply from Sierras river/dam sources",
+        "notes": "Punilla Valley town between Cosquín and Villa Carlos Paz."
+      },
+      "Los_Cocos": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Punilla norte / Sierras",
+        "department": "Punilla",
+        "geology": "Crystalline basement at elevation",
+        "water_supply": "Mountain springs and local wells",
+        "notes": "Small mountain town north of La Cumbre. Very low arsenic."
+      },
+      "Villa_Yacanto": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5",
+        "zone": "Calamuchita / Sierras de Comechingones",
+        "department": "Calamuchita",
+        "geology": "Deep within Sierras de Comechingones crystalline basement",
+        "water_supply": "Mountain springs and streams",
+        "notes": "Remote Sierras town, pristine water conditions. Very low arsenic."
+      }
+    },
+
+    "transition_urban": {
+      "Malagueno": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<5-15",
+        "zone": "Western piedmont transition",
+        "department": "Santa María",
+        "geology": "Western piedmont of Sierras Chicas, transitional geology. Closer to Sierras than to Pampean plain.",
+        "water_supply": "Municipal cooperative, some surface water connections",
+        "notes": "Malagueño sits west-southwest of Córdoba city, on the western side closer to the Sierras. This position means groundwater is generally influenced more by Sierras crystalline geology than by Pampean loess. Risk is low but some deeper wells in sedimentary pockets could show slightly elevated levels. The numerous gated communities (DOCTA, Valle del Golf, Las Cañitas, etc.) typically have engineered water supplies."
+      },
+      "Cordoba_city": {
+        "risk_level": "low",
+        "arsenic_range_ug_L": "<10",
+        "zone": "Piedmont transition - urban",
+        "department": "Capital",
+        "geology": "City straddles the transition from Sierras Chicas piedmont (west) to beginning of Pampean plain (east/south). However, treated surface water dominates supply.",
+        "water_supply": "Aguas Cordobesas (private concessionaire) supplies treated water primarily from Suquía River (sourced from San Roque dam) and Los Molinos-Río Tercero aqueduct. The water treatment plants (Suquía and Bower) remove/reduce contaminants.",
+        "notes": "Córdoba capital has LOW arsenic risk in municipal tap water because it is supplied by treated surface water from Sierras dams, not from groundwater. This is a critical distinction. The city of ~1.5 million people has reliable treated water infrastructure."
+      },
+      "Cordoba_neighborhoods": {
+        "Manantiales": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Southern periphery development (Grupo Edisur). Connected to municipal water network and/or has its own treated supply. Despite being on the southern expansion front, water infrastructure is engineered. Low risk with municipal supply."
+        },
+        "Nueva_Cordoba": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<5",
+          "notes": "Central urban neighborhood, fully serviced by Aguas Cordobesas treated surface water. No arsenic concern."
+        },
+        "General_Paz": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<5",
+          "notes": "Traditional central neighborhood, fully connected to treated municipal water. No arsenic concern."
+        },
+        "Arguello": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Northwestern neighborhood, well within Aguas Cordobesas service area. Proximity to Sierras Chicas side. Low risk."
+        },
+        "Villa_Warcalde": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Western neighborhood near Sierras Chicas. Connected to municipal supply. Low risk."
+        },
+        "Los_Boulevares": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Western neighborhood, within municipal water network. Low risk."
+        },
+        "Villa_Rivera_Indarte": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Northwestern area, municipal water supply. Low risk."
+        },
+        "Inaudi": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Southern neighborhood, within municipal water service area."
+        },
+        "San_Ignacio_Village": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Suburban development within Córdoba municipal water network."
+        },
+        "Siete_Soles": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Major suburban development northwest of Córdoba, between the city and Sierras Chicas. Has engineered water infrastructure. Low risk."
+        },
+        "Valle_Escondido": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Gated community west of Córdoba near Sierras. Engineered water supply. Low risk."
+        },
+        "Quintas_de_Flores": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Suburban area, within municipal service expansion. Low risk."
+        },
+        "DOCTA": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Major planned community near Malagueño. Has engineered water treatment and distribution. Western position favors Sierras-influenced groundwater."
+        },
+        "Distrito_Sur": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Southern expansion area of Córdoba. Municipal water connections. Low risk."
+        },
+        "Centro": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<5",
+          "notes": "Downtown Córdoba, fully serviced by treated municipal water."
+        },
+        "Observatorio": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<5",
+          "notes": "Central neighborhood, treated municipal water."
+        },
+        "Colon": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<5",
+          "notes": "Traditional central neighborhood, treated municipal water."
+        },
+        "Villa_Esquiu": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Neighborhood within municipal water network."
+        },
+        "Santa_Maria_neighborhood": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Neighborhood within Córdoba, connected to municipal supply."
+        },
+        "Coronel_Olmedo": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<10",
+          "notes": "Area within Córdoba city's municipal water network."
+        },
+        "San_Roque_neighborhood": {
+          "risk_level": "low",
+          "arsenic_range_ug_L": "<5",
+          "notes": "Central-western neighborhood, treated municipal water."
+        }
+      }
+    },
+
+    "plains_towns": {
+      "Monte_Cristo": {
+        "risk_level": "medium",
+        "arsenic_range_ug_L": "10-50",
+        "zone": "Eastern plains / transition",
+        "department": "Río Primero",
+        "geology": "Eastern edge of piedmont transitioning to Pampean loess plain. Groundwater from mixed sedimentary aquifer.",
+        "water_supply": "Municipal cooperative. Groundwater is primary source, though some surface water connections have been developed.",
+        "notes": "Monte Cristo is located ~30km east-northeast of Córdoba city, well into the transitional zone where Pampean sediments begin to dominate. Groundwater arsenic levels in the Río Primero department have been documented in the 10-80 μg/L range. Municipal treatment may reduce levels, but private wells are at higher risk. MEDIUM risk classification."
+      },
+      "Colonia_Caroya": {
+        "risk_level": "low_to_medium",
+        "arsenic_range_ug_L": "5-30",
+        "zone": "Northern plains / Sierras Chicas norte transition",
+        "department": "Colón",
+        "geology": "Northern piedmont of Sierras Chicas transitioning to northern plain. Mixed crystalline and sedimentary influence.",
+        "water_supply": "Municipal cooperative, groundwater with some treatment",
+        "notes": "Colonia Caroya is ~50km north of Córdoba, in Colón department, at the northern end of the Sierras Chicas influence zone. It's in a transitional position: not as deep into the plains as Jesús María's eastern zone. Some studies have found arsenic in the 10-30 μg/L range in parts of this area, but it's generally lower than the SE Córdoba plain. LOW-TO-MEDIUM risk."
+      },
+      "Rio_Segundo_Villa_del_Rosario": {
+        "risk_level": "medium_to_high",
+        "arsenic_range_ug_L": "20-100+",
+        "zone": "Eastern Pampean plain",
+        "department": "Río Segundo",
+        "geology": "Full Pampean loess sediments. Part of the Chaco-Pampean arsenic belt.",
+        "water_supply": "Groundwater-dependent. Some larger towns have begun treatment or pipeline connections.",
+        "notes": "Río Segundo department is in the heart of the Pampean plain arsenic zone. Multiple studies have documented groundwater arsenic levels of 50-200+ μg/L in this department. The city of Río Segundo and Villa del Rosario have historically struggled with arsenic in their water supply. This is MEDIUM-TO-HIGH risk. Some municipal treatment may reduce exposure, but groundwater sources are inherently contaminated."
+      }
+    }
+  },
+
+  "risk_summary_table": [
+    {"location": "Río Ceballos", "zone_type": "Sierras Chicas", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "Unquillo", "zone_type": "Sierras Chicas", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "Mendiolaza", "zone_type": "Sierras Chicas piedmont", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "Villa Allende", "zone_type": "Sierras Chicas piedmont", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "La Calera", "zone_type": "Sierras Chicas", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "Villa Carlos Paz", "zone_type": "Sierras / Punilla", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Cosquín", "zone_type": "Sierras / Punilla", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "La Falda", "zone_type": "Sierras / Punilla", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "La Cumbre", "zone_type": "Sierras / Punilla norte", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Villa Giardino", "zone_type": "Sierras / Punilla norte", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Alta Gracia", "zone_type": "Sierras piedmont south", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "Santa Rosa de Calamuchita", "zone_type": "Sierras / Calamuchita", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Los Molinos", "zone_type": "Sierras / Calamuchita", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Potrero de Garay", "zone_type": "Sierras / Calamuchita", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Ascochinga", "zone_type": "Sierras Chicas norte", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "San Antonio de Arredondo", "zone_type": "Sierras / Punilla", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Estancia Vieja", "zone_type": "Sierras / Punilla", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Santa María de Punilla", "zone_type": "Sierras / Punilla", "risk": "low", "As_range_ug_L": "<5-10", "municipal_water_safe": true},
+    {"location": "Los Cocos", "zone_type": "Sierras / Punilla norte", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Villa Yacanto", "zone_type": "Sierras de Comechingones", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Malagueño", "zone_type": "Western piedmont", "risk": "low", "As_range_ug_L": "<5-15", "municipal_water_safe": true},
+    {"location": "Córdoba city (all neighborhoods)", "zone_type": "Urban / piedmont", "risk": "low", "As_range_ug_L": "<10", "municipal_water_safe": true},
+    {"location": "Manantiales", "zone_type": "Córdoba south suburban", "risk": "low", "As_range_ug_L": "<10", "municipal_water_safe": true},
+    {"location": "Nueva Córdoba", "zone_type": "Córdoba central", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "General Paz", "zone_type": "Córdoba central", "risk": "low", "As_range_ug_L": "<5", "municipal_water_safe": true},
+    {"location": "Argüello", "zone_type": "Córdoba northwest", "risk": "low", "As_range_ug_L": "<10", "municipal_water_safe": true},
+    {"location": "DOCTA", "zone_type": "Malagueño planned community", "risk": "low", "As_range_ug_L": "<10", "municipal_water_safe": true},
+    {"location": "Siete Soles", "zone_type": "Córdoba NW suburban", "risk": "low", "As_range_ug_L": "<10", "municipal_water_safe": true},
+    {"location": "Valle Escondido", "zone_type": "Córdoba west suburban", "risk": "low", "As_range_ug_L": "<10", "municipal_water_safe": true},
+    {"location": "Monte Cristo", "zone_type": "Eastern plains transition", "risk": "medium", "As_range_ug_L": "10-50", "municipal_water_safe": "variable"},
+    {"location": "Colonia Caroya", "zone_type": "Northern plains transition", "risk": "low_to_medium", "As_range_ug_L": "5-30", "municipal_water_safe": "likely_with_treatment"},
+    {"location": "Río Segundo / Villa del Rosario", "zone_type": "Eastern Pampean plain", "risk": "medium_to_high", "As_range_ug_L": "20-100+", "municipal_water_safe": "requires_treatment"}
+  ],
+
+  "narrative_summary": {
+    "overview": "Córdoba province presents a tale of two geological worlds with respect to arsenic contamination. The western portion of the province, dominated by the Sierras de Córdoba mountain ranges (Sierras Chicas, Sierras Grandes, Sierras de Comechingones, Sierras del Norte), sits on Precambrian-Paleozoic crystalline basement rocks that produce groundwater naturally low in arsenic (<10 μg/L, usually <5 μg/L). The eastern portion of the province lies on the Chaco-Pampean loess plain, one of the world's largest naturally occurring arsenic-contaminated aquifer systems, where groundwater routinely contains 50-500+ μg/L of arsenic of volcanic origin.",
+
+    "good_news_for_sierras_buyers": "The overwhelming majority of real estate listings in this dataset are located in the Sierras de Córdoba or in Córdoba city, both of which have LOW arsenic risk. Towns like Villa Carlos Paz, La Cumbre, Santa Rosa de Calamuchita, Los Molinos, Potrero de Garay, Estancia Vieja, and San Antonio de Arredondo sit on crystalline basement rock with naturally pristine groundwater. The entire Punilla Valley (Villa Carlos Paz to La Cumbre) and the Calamuchita Valley are geologically safe zones. Sierras Chicas towns (Río Ceballos, Unquillo, Mendiolaza, Villa Allende, La Calera, Ascochinga) are similarly safe. Córdoba city itself is supplied by treated surface water from Sierras dams (San Roque, Los Molinos) and poses no arsenic risk in municipal tap water.",
+
+    "caution_areas": "The only locations in this dataset that warrant caution are those on the eastern plains: Monte Cristo (Río Primero department, ~30km east of Córdoba) shows MEDIUM risk with potential arsenic levels of 10-50 μg/L in groundwater. Colonia Caroya (northern transition zone) has LOW-TO-MEDIUM risk. Río Segundo/Villa del Rosario (Río Segundo department, ~80km SE of Córdoba) presents MEDIUM-TO-HIGH risk, as this area is squarely within the Chaco-Pampean arsenic belt with documented groundwater arsenic of 20-100+ μg/L.",
+
+    "practical_advice": "For any property purchase: (1) In Sierras locations and Córdoba city, arsenic is not a significant concern if connected to municipal water. (2) For rural properties or those relying on private wells, always request a water quality analysis that includes arsenic testing. (3) For locations on the plains (Monte Cristo, Río Segundo, Colonia Caroya), arsenic testing is essential before purchase. (4) Reverse osmosis systems effectively remove arsenic and are a viable household solution. (5) The Argentine standard of 10 μg/L matches WHO guidelines; any results above this level indicate the need for treatment.",
+
+    "HACRE_context": "Argentina has a long history of endemic chronic hydroarsenicism (HACRE - Hidroarsenicismo Crónico Regional Endémico), first described in the early 20th century in the Pampean region. Chronic exposure to arsenic above 50 μg/L is associated with skin lesions, peripheral vascular disease, increased cancer risk (bladder, lung, skin), and developmental effects. The disease was historically concentrated in rural communities of the eastern Córdoba, southern Santa Fe, and northern Buenos Aires plains that relied exclusively on groundwater."
+  },
+
+  "key_published_studies": [
+    {
+      "authors": "Nicolli, H.B., Bundschuh, J., Blanco, M.C., et al.",
+      "year": 2012,
+      "title": "Arsenic and associated trace-elements in groundwater from the Chaco-Pampean plain, Argentina: Results from 100 years of research",
+      "journal": "Science of the Total Environment",
+      "relevance": "Comprehensive review of arsenic in the Chaco-Pampean plain including Córdoba data"
+    },
+    {
+      "authors": "Bundschuh, J., Farias, B., Martin, R., et al.",
+      "year": 2004,
+      "title": "Groundwater arsenic in the Chaco-Pampean Plain, Argentina: case study from Robles county, Santiago del Estero Province",
+      "journal": "Applied Geochemistry",
+      "relevance": "Detailed geochemical study of arsenic mobilization mechanisms applicable to all Chaco-Pampean provinces"
+    },
+    {
+      "authors": "Smedley, P.L., Kinniburgh, D.G.",
+      "year": 2002,
+      "title": "A review of the source, behaviour and distribution of arsenic in natural waters",
+      "journal": "Applied Geochemistry",
+      "relevance": "Foundational global review identifying the Chaco-Pampean plain as a major arsenic province"
+    },
+    {
+      "authors": "Cabrera, A., Blarasin, M., Villalba, G.",
+      "year": 2001,
+      "title": "Groundwater contamination with arsenic and other trace elements in an area of the Pampa, Province of Córdoba, Argentina",
+      "journal": "Environmental Geology",
+      "relevance": "Direct study of southeastern Córdoba province arsenic contamination"
+    },
+    {
+      "authors": "Nicolli, H.B., Suriano, J.M., Gomez Peral, M.A., Ferpozzi, L.H., Baleani, O.A.",
+      "year": 1989,
+      "title": "Groundwater contamination with arsenic and other trace elements in an area of the Pampa, Province of Córdoba, Argentina",
+      "journal": "Environmental Geology and Water Sciences",
+      "relevance": "Early systematic study documenting arsenic in southeastern Córdoba groundwater (Marcos Juárez area)"
+    },
+    {
+      "authors": "Blarasin, M., Cabrera, A., Matteoda, E.",
+      "year": 2014,
+      "title": "Aguas subterráneas de la provincia de Córdoba",
+      "journal": "UniRío Editora, Universidad Nacional de Río Cuarto",
+      "relevance": "Comprehensive provincial groundwater atlas including arsenic distribution maps for Córdoba"
+    },
+    {
+      "authors": "Auge, M.",
+      "year": 2009,
+      "title": "Arsénico en el agua subterránea",
+      "journal": "Report for La Plata University / UNESCO",
+      "relevance": "National-level mapping of arsenic in Argentine groundwater including Córdoba province data"
+    }
+  ]
+}
